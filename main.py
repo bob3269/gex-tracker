@@ -20,15 +20,38 @@ contract_size = 100
 def run(ticker):
     spot_price, option_data = scrape_data(ticker)
     compute_total_gex(spot_price, option_data)
-    compute_gex_by_strike(spot_price, option_data)
+    # compute_gex_by_strike(spot_price, option_data)
+    compute_gex_by_strike(spot_price, option_data, 1,
+                          (spot_price - 15), (spot_price + 15))
+    compute_gex_by_strike(spot_price, option_data, 7)
+    compute_gex_by_strike(spot_price, option_data, 365)
+
     compute_gex_by_expiration(option_data)
     print_gex_surface(spot_price, option_data)
+
+    return
+
+
+def runTiny(ticker):
+    spot_price, option_data = scrape_data(ticker)
+    compute_total_gex(spot_price, option_data)
+    # compute_gex_by_strike(spot_price, option_data)
+    # compute_gex_by_strike(spot_price, option_data, 1,
+    #                       (spot_price - 15), (spot_price + 15))
+    # compute_gex_by_strike(spot_price, option_data, 7)
+    # compute_gex_by_strike(spot_price, option_data, 365)
+
+    # compute_gex_by_expiration(option_data)
+    print_gex_surface(spot_price, option_data)
+
+    return
 
 
 def scrape_data(ticker):
     """Scrape data from CBOE website"""
     # Check if data is already downloaded
-    if f"{ticker}.json" in os.listdir("data"):
+    # Remove Trash word to make it work
+    if f"{ticker}Trash.json" in os.listdir("data"):
         f = open(f"data/{ticker}.json")
         data = pd.DataFrame.from_dict(json.load(f))
     else:
@@ -72,20 +95,34 @@ def fix_option_data(data):
 def compute_total_gex(spot, data):
     """Compute dealers' total GEX"""
     # Compute gamma exposure for each option
-    data["GEX"] = spot * data.gamma * data.open_interest * contract_size * spot * 0.01
+    data["GEX"] = spot * data.gamma * \
+        data.open_interest * contract_size * spot * 0.01
 
     # For put option we assume negative gamma, i.e. dealers sell puts and buy calls
-    data["GEX"] = data.apply(lambda x: -x.GEX if x.type == "P" else x.GEX, axis=1)
+    data["GEX"] = data.apply(
+        lambda x: -x.GEX if x.type == "P" else x.GEX, axis=1)
     print(f"Total notional GEX: ${round(data.GEX.sum() / 10 ** 9, 4)} Bn")
 
 
-def compute_gex_by_strike(spot, data):
+def compute_gex_by_strike(spot, data, days, strikesFrom=0, strikesTo=0):
+
+    selected_date = datetime.today() + timedelta(days=days)
+    data = data.loc[data.expiration < selected_date]
+    if (strikesFrom > 0):
+        data = data.loc[data.strike > strikesFrom]
+    if (strikesTo > 0):
+        data = data.loc[data.strike < strikesTo]
+
+    if data.size == 0:
+        return
+
     """Compute and plot GEX by strike"""
     # Compute total GEX by strike
     gex_by_strike = data.groupby("strike")["GEX"].sum() / 10**9
 
     # Limit data to +- 15% from spot price
-    limit_criteria = (gex_by_strike.index > spot * 0.85) & (gex_by_strike.index < spot * 1.15)
+    limit_criteria = (gex_by_strike.index > spot *
+                      0.85) & (gex_by_strike.index < spot * 1.15)
 
     # Plot GEX by strike
     plt.bar(
@@ -99,7 +136,7 @@ def compute_gex_by_strike(spot, data):
     plt.yticks(fontweight="heavy")
     plt.xlabel("Strike", fontweight="heavy")
     plt.ylabel("Gamma Exposure (Bn$ / %)", fontweight="heavy")
-    plt.title(f"{ticker} GEX by strike", fontweight="heavy")
+    plt.title(f"{ticker} GEX by strike for {days} day(s)", fontweight="heavy")
     plt.show()
 
 
@@ -152,7 +189,8 @@ def print_gex_surface(spot, data):
         data["GEX"],
         cmap="seismic_r",
     )
-    ax.yaxis.set_major_formatter(dates.AutoDateFormatter(ax.xaxis.get_major_locator()))
+    ax.yaxis.set_major_formatter(
+        dates.AutoDateFormatter(ax.xaxis.get_major_locator()))
     ax.set_ylabel("Expiration date", fontweight="heavy")
     ax.set_xlabel("Strike Price", fontweight="heavy")
     ax.set_zlabel("Gamma (M$ / %)", fontweight="heavy")
@@ -161,4 +199,5 @@ def print_gex_surface(spot, data):
 
 if __name__ == "__main__":
     ticker = input("Enter desired ticker:").upper()
-    run(ticker)
+    # run(ticker)
+    runTiny(ticker)
