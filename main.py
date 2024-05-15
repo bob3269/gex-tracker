@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import requests
 from matplotlib import dates
+import shutil
+from pathlib import Path
 
 # Set plot style
 plt.style.use("seaborn-dark")
@@ -15,6 +17,7 @@ for param in ["text.color", "axes.labelcolor", "xtick.color", "ytick.color"]:
     plt.rcParams[param] = "0.9"
 
 contract_size = 100
+path = "D:/My Data/Projects/Visual Studio 2019/Projects/GitHub Samples/Python/gex-tracker/data"
 
 
 def run(ticker):
@@ -38,11 +41,19 @@ def runTiny(ticker):
     # compute_gex_by_strike(spot_price, option_data)
     # compute_gex_by_strike(spot_price, option_data, 1,
     #                       (spot_price - 15), (spot_price + 15))
-    # compute_gex_by_strike(spot_price, option_data, 7)
+    StrikestoAdj = 100 if (spot_price > 1000) else 25
+    compute_gex_by_strike(spot_price, option_data, 1,
+                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+    compute_gex_by_strike(spot_price, option_data, 2,
+                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+    compute_gex_by_strike(spot_price, option_data, 3,
+                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+    compute_gex_by_strike(spot_price, option_data, 7,
+                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
     # compute_gex_by_strike(spot_price, option_data, 365)
 
     # compute_gex_by_expiration(option_data)
-    print_gex_surface(spot_price, option_data)
+    # print_gex_surface(spot_price, option_data)
 
     return
 
@@ -201,3 +212,14 @@ if __name__ == "__main__":
     ticker = input("Enter desired ticker:").upper()
     # run(ticker)
     runTiny(ticker)
+
+    folder = path
+    for filename in os.listdir(path):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
