@@ -10,7 +10,9 @@ import shutil
 from pathlib import Path
 
 # Set plot style
-plt.style.use("seaborn-dark")
+# plt.style.use("seaborn-dark")
+plt.style.use("seaborn-v0_8")
+
 for param in ["figure.facecolor", "axes.facecolor", "savefig.facecolor"]:
     plt.rcParams[param] = "#212946"
 for param in ["text.color", "axes.labelcolor", "xtick.color", "ytick.color"]:
@@ -53,6 +55,7 @@ def runTiny(ticker):
     # compute_gex_by_strike(spot_price, option_data, 365)
 
     # compute_gex_by_expiration(option_data)
+    compute_gex_by_expiration(option_data, 15)
     # print_gex_surface(spot_price, option_data)
 
     return
@@ -151,10 +154,10 @@ def compute_gex_by_strike(spot, data, days, strikesFrom=0, strikesTo=0):
     plt.show()
 
 
-def compute_gex_by_expiration(data):
+def compute_gex_by_expiration(data, daysIn=365):
     """Compute and plot GEX by expiration"""
     # Limit data to one year
-    selected_date = datetime.today() + timedelta(days=365)
+    selected_date = datetime.today() + timedelta(days=daysIn)
     data = data.loc[data.expiration < selected_date]
 
     # Compute GEX by expiration date
