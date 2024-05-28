@@ -44,14 +44,20 @@ def runTiny(ticker):
     # compute_gex_by_strike(spot_price, option_data, 1,
     #                       (spot_price - 15), (spot_price + 15))
     StrikestoAdj = 100 if (spot_price > 1000) else 25
-    compute_gex_by_strike(spot_price, option_data, 1,
-                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
-    compute_gex_by_strike(spot_price, option_data, 2,
-                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
-    compute_gex_by_strike(spot_price, option_data, 3,
-                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
-    compute_gex_by_strike(spot_price, option_data, 7,
-                          (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+
+    dtelst = [0, 2, 7, 14]
+    for dteItem in dtelst:
+        compute_gex_by_strike(spot_price, option_data, dteItem,
+                              (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+
+    # compute_gex_by_strike(spot_price, option_data, 1,
+    #                       (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+    # compute_gex_by_strike(spot_price, option_data, 2,
+    #                       (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+    # compute_gex_by_strike(spot_price, option_data, 3,
+    #                       (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+    # compute_gex_by_strike(spot_price, option_data, 7,
+    #                       (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
     # compute_gex_by_strike(spot_price, option_data, 365)
 
     # compute_gex_by_expiration(option_data)
