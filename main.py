@@ -61,7 +61,7 @@ def runTiny(ticker):
     # compute_gex_by_strike(spot_price, option_data, 365)
 
     # compute_gex_by_expiration(option_data)
-    compute_gex_by_expiration(option_data, 15)
+    compute_gex_by_expiration(option_data, 70)
     # print_gex_surface(spot_price, option_data)
 
     return
@@ -121,6 +121,7 @@ def compute_total_gex(spot, data):
     # For put option we assume negative gamma, i.e. dealers sell puts and buy calls
     data["GEX"] = data.apply(
         lambda x: -x.GEX if x.type == "P" else x.GEX, axis=1)
+    print(f"Price: {spot}")
     print(f"Total notional GEX: ${round(data.GEX.sum() / 10 ** 9, 4)} Bn")
 
 
@@ -158,6 +159,11 @@ def compute_gex_by_strike(spot, data, days, strikesFrom=0, strikesTo=0):
     plt.ylabel("Gamma Exposure (Bn$ / %)", fontweight="heavy")
     plt.title(f"{ticker} GEX by strike for {days} day(s)", fontweight="heavy")
     plt.show()
+
+    data["GEX"] = data.apply(
+        lambda x: -x.GEX if x.type == "P" else x.GEX, axis=1)
+    print(
+        f"Total notional GEX - {days} DTE: ${round(data.GEX.sum() / 10 ** 9, 4)} Bn")
 
 
 def compute_gex_by_expiration(data, daysIn=365):
