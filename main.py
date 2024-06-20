@@ -46,6 +46,8 @@ def runTiny(ticker):
     StrikestoAdj = 100 if (spot_price > 1000) else 25
 
     dtelst = [0, 2, 7, 14]
+    if (ticker in ['SPY', 'QQQ', 'IWM']):
+        dtelst = [0, 1, 2, 7]
     for dteItem in dtelst:
         compute_gex_by_strike(spot_price, option_data, dteItem,
                               (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
@@ -163,7 +165,7 @@ def compute_gex_by_strike(spot, data, days, strikesFrom=0, strikesTo=0):
     data["GEX"] = data.apply(
         lambda x: -x.GEX if x.type == "P" else x.GEX, axis=1)
     print(
-        f"Total notional GEX - {days} DTE: ${round(data.GEX.sum() / 10 ** 9, 4)} Bn")
+        f"Total notional GEX for {days} DTE: ${round(data.GEX.sum() / 10 ** 9, 4)} Bn")
 
 
 def compute_gex_by_expiration(data, daysIn=365):
