@@ -45,12 +45,17 @@ def runTiny(ticker):
     #                       (spot_price - 15), (spot_price + 15))
     StrikestoAdj = 100 if (spot_price > 1000) else 25
 
-    dtelst = [0, 2, 7, 14]
-    if (ticker in ['SPY', 'QQQ', 'IWM']):
-        dtelst = [0, 1, 2, 7]
-    for dteItem in dtelst:
-        compute_gex_by_strike(spot_price, option_data, dteItem,
-                              (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+    # dtelst = [0, 2, 7, 14]
+    # if (ticker in ['SPY', 'QQQ', 'IWM']):
+    #     dtelst = [0, 1, 2, 7]
+    # for dteItem in dtelst:
+    #     compute_gex_by_strike(spot_price, option_data, dteItem,
+    #                           (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
+
+    seqlst = [0, 1, 2, 3]
+    for seq in seqlst:
+        compute_gex_by_strike_ExpirySequence(spot_price, option_data, seq,
+                                             (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
 
     # compute_gex_by_strike(spot_price, option_data, 1,
     #                       (spot_price - StrikestoAdj), (spot_price + StrikestoAdj))
@@ -125,6 +130,53 @@ def compute_total_gex(spot, data):
         lambda x: -x.GEX if x.type == "P" else x.GEX, axis=1)
     print(f"Price: {spot}")
     print(f"Total notional GEX: ${round(data.GEX.sum() / 10 ** 9, 4)} Bn")
+
+
+def compute_gex_by_strike_ExpirySequence(spot, dataIn, seq, strikesFrom=0, strikesTo=0):
+
+    AllExpirations = dataIn.expiration.unique()
+    AllExpirations = sorted(AllExpirations)
+    expiry = pd.to_datetime(
+        str(AllExpirations[seq])).strftime('%Y.%m.%d %H:%M')
+    # selected_date = datetime.today() + timedelta(days=days)
+    # data = dataIn.loc[dataIn.expiration < selected_date]
+    data = dataIn.loc[dataIn.expiration == AllExpirations[seq]]
+    if (strikesFrom > 0):
+        data = data.loc[data.strike > strikesFrom]
+    if (strikesTo > 0):
+        data = data.loc[data.strike < strikesTo]
+
+    if data.size == 0:
+        return
+
+    """Compute and plot GEX by strike"""
+    # Compute total GEX by strike
+    gex_by_strike = data.groupby("strike")["GEX"].sum() / 10**9
+
+    # Limit data to +- 15% from spot price
+    limit_criteria = (gex_by_strike.index > spot *
+                      0.85) & (gex_by_strike.index < spot * 1.15)
+
+    # Plot GEX by strike
+    plt.bar(
+        gex_by_strike.loc[limit_criteria].index,
+        gex_by_strike.loc[limit_criteria],
+        color="#FE53BB",
+        alpha=0.5,
+    )
+    plt.grid(color="#2A3459")
+    plt.xticks(fontweight="heavy")
+    plt.yticks(fontweight="heavy")
+    plt.xlabel("Strike", fontweight="heavy")
+    plt.ylabel("Gamma Exposure (Bn$ / %)", fontweight="heavy")
+    plt.title(
+        f"{ticker} GEX by strike for {expiry} Expiry.", fontweight="heavy")
+    plt.show()
+
+    data["GEX"] = data.apply(
+        lambda x: -x.GEX if x.type == "P" else x.GEX, axis=1)
+    print(
+        f"Total notional GEX for for {expiry} Expiry. : ${round(data.GEX.sum() / 10 ** 9, 4)} Bn")
 
 
 def compute_gex_by_strike(spot, data, days, strikesFrom=0, strikesTo=0):
